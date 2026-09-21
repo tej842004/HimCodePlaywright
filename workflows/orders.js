@@ -1,23 +1,21 @@
-const { runPythonFunction } = require("../database/pythonRunner");
+const { runPythonFunction } = require('../database/pythonRunner');
 
 const ORDER_COLUMNS = [
-  "Start Date/Time",
-  "Description",
-  "Status",
-  "Additional Info",
-  "Ordering Provider",
-  "Order Type",
-  "Department",
-  "Order Set/List/Protocol",
+  'Start Date/Time',
+  'Description',
+  'Status',
+  'Additional Info',
+  'Ordering Provider',
+  'Order Type',
+  'Department',
+  'Order Set/List/Protocol',
 ];
 
 /**
  * Returns the currently rendered rows from the virtualized grid.
  */
 function orderRows(page) {
-  return page.locator(
-    "#order_chronology_listCtrl cpsi-grid#grid tbody#items tr[role='row']",
-  );
+  return page.locator("#order_chronology_listCtrl cpsi-grid#grid tbody#items tr[role='row']");
 }
 
 /**
@@ -28,10 +26,10 @@ function orderRows(page) {
  * locator without throwing an error.
  */
 async function waitForOrderGrid(page) {
-  const list = page.locator("#order_chronology_listCtrl");
+  const list = page.locator('#order_chronology_listCtrl');
 
   await list.waitFor({
-    state: "visible",
+    state: 'visible',
     timeout: 30000,
   });
 
@@ -86,7 +84,7 @@ async function waitForOrderGrid(page) {
     const listText = await list.textContent();
 
     if (listText && /EMPTY LIST|NO DATA FOUND|No Data Found/i.test(listText)) {
-      console.log("Order Chronology table is empty.");
+      console.log('Order Chronology table is empty.');
 
       return rows;
     }
@@ -95,9 +93,7 @@ async function waitForOrderGrid(page) {
      * If tbody#items exists and contains no rows,
      * treat it as an empty Order Chronology table.
      */
-    const itemsCount = await list
-      .locator("cpsi-grid#grid tbody#items tr[role='row']")
-      .count();
+    const itemsCount = await list.locator("cpsi-grid#grid tbody#items tr[role='row']").count();
 
     if (itemsCount === 0) {
       /*
@@ -106,12 +102,10 @@ async function waitForOrderGrid(page) {
        */
       await page.waitForTimeout(500);
 
-      const secondCount = await list
-        .locator("cpsi-grid#grid tbody#items tr[role='row']")
-        .count();
+      const secondCount = await list.locator("cpsi-grid#grid tbody#items tr[role='row']").count();
 
       if (secondCount === 0) {
-        console.log("Order Chronology table contains no rows.");
+        console.log('Order Chronology table contains no rows.');
 
         return rows;
       }
@@ -124,7 +118,7 @@ async function waitForOrderGrid(page) {
    * If the grid exists but never produces usable data,
    * return the rows locator instead of throwing.
    */
-  console.log("Order Chronology grid contains no usable data.");
+  console.log('Order Chronology grid contains no usable data.');
 
   return rows;
 }
@@ -144,10 +138,10 @@ async function waitForOrderGrid(page) {
  */
 async function getCellValue(cell) {
   return await cell.evaluate((cellElement) => {
-    const slot = cellElement.querySelector("slot");
+    const slot = cellElement.querySelector('slot');
 
     if (!slot) {
-      return "";
+      return '';
     }
 
     const assignedElements = slot.assignedElements({
@@ -160,28 +154,26 @@ async function getCellValue(cell) {
        *
        * <span title="actual value">
        */
-      const span = element.matches("span[title]")
-        ? element
-        : element.querySelector("span[title]");
+      const span = element.matches('span[title]') ? element : element.querySelector('span[title]');
 
       if (span) {
-        const title = span.getAttribute("title");
+        const title = span.getAttribute('title');
 
-        if (title && title !== "undefined") {
+        if (title && title !== 'undefined') {
           return title.trim();
         }
 
-        return (span.textContent || "").replace(/\s+/g, " ").trim();
+        return (span.textContent || '').replace(/\s+/g, ' ').trim();
       }
 
-      const text = (element.textContent || "").replace(/\s+/g, " ").trim();
+      const text = (element.textContent || '').replace(/\s+/g, ' ').trim();
 
       if (text) {
         return text;
       }
     }
 
-    return "";
+    return '';
   });
 }
 
@@ -196,8 +188,8 @@ async function readOrderDetailValue(dataValue) {
     /*
      * Normal text element.
      */
-    if (element.tagName.toLowerCase() !== "cp-textarea") {
-      return (element.textContent || "").replace(/\s+/g, " ").trim();
+    if (element.tagName.toLowerCase() !== 'cp-textarea') {
+      return (element.textContent || '').replace(/\s+/g, ' ').trim();
     }
 
     /*
@@ -206,16 +198,16 @@ async function readOrderDetailValue(dataValue) {
     const shadowRoot = element.shadowRoot;
 
     if (!shadowRoot) {
-      return "";
+      return '';
     }
 
-    const textarea = shadowRoot.querySelector("textarea");
+    const textarea = shadowRoot.querySelector('textarea');
 
     if (!textarea) {
-      return "";
+      return '';
     }
 
-    return (textarea.value || "").replace(/\s+/g, " ").trim();
+    return (textarea.value || '').replace(/\s+/g, ' ').trim();
   });
 }
 
@@ -259,7 +251,7 @@ async function extractOrderDescription(orderInformation) {
     '[id="or1_testdesc"], ' +
       '[id^="orderDescription"], ' +
       '[ctrl-name="or1_testdesc"], ' +
-      '[ctrl-name^="orderDescription"]',
+      '[ctrl-name^="orderDescription"]'
   );
 
   const count = await candidates.count();
@@ -277,20 +269,16 @@ async function extractOrderDescription(orderInformation) {
       continue;
     }
 
-    let value = "";
+    let value = '';
 
     /*
      * cp-textarea is possible, although the known
      * description examples are normally text elements.
      */
-    if (
-      (await candidate.evaluate((element) => element.tagName.toLowerCase())) ===
-      "cp-textarea"
-    ) {
+    if ((await candidate.evaluate((element) => element.tagName.toLowerCase())) === 'cp-textarea') {
       value = await readOrderDetailValue(candidate);
     } else {
-      value =
-        (await candidate.textContent())?.replace(/\s+/g, " ").trim() || "";
+      value = (await candidate.textContent())?.replace(/\s+/g, ' ').trim() || '';
     }
 
     if (!value) {
@@ -324,7 +312,7 @@ async function extractOrderDescription(orderInformation) {
    * "Medication A Take once daily"
    */
   if (descriptions.length > 0) {
-    return descriptions.join(" ").trim();
+    return descriptions.join(' ').trim();
   }
 
   /*
@@ -337,14 +325,14 @@ async function extractOrderDescription(orderInformation) {
    * We look at the content immediately before the
    * Order Information table.
    */
-  const content = orderInformation.locator(".labeled-div-content").first();
+  const content = orderInformation.locator('.labeled-div-content').first();
 
   if (await content.count()) {
     /*
      * Look for dataValue elements that are NOT inside
      * the detail table.
      */
-    const fallbackValues = content.locator(".dataValue:not(table .dataValue)");
+    const fallbackValues = content.locator('.dataValue:not(table .dataValue)');
 
     const fallbackCount = await fallbackValues.count();
 
@@ -357,8 +345,7 @@ async function extractOrderDescription(orderInformation) {
         continue;
       }
 
-      const value =
-        (await element.textContent())?.replace(/\s+/g, " ").trim() || "";
+      const value = (await element.textContent())?.replace(/\s+/g, ' ').trim() || '';
 
       if (!value) {
         continue;
@@ -368,13 +355,13 @@ async function extractOrderDescription(orderInformation) {
        * Don't accidentally use known controls such
        * as boxed warning.
        */
-      const id = await element.getAttribute("id");
+      const id = await element.getAttribute('id');
 
-      const ctrlName = await element.getAttribute("ctrl-name");
+      const ctrlName = await element.getAttribute('ctrl-name');
 
-      const combinedIdentifier = `${id || ""} ${ctrlName || ""}`.toLowerCase();
+      const combinedIdentifier = `${id || ''} ${ctrlName || ''}`.toLowerCase();
 
-      if (combinedIdentifier.includes("boxed_warn")) {
+      if (combinedIdentifier.includes('boxed_warn')) {
         continue;
       }
 
@@ -384,14 +371,14 @@ async function extractOrderDescription(orderInformation) {
     }
 
     if (fallbackDescriptions.length > 0) {
-      return fallbackDescriptions.join(" ").trim();
+      return fallbackDescriptions.join(' ').trim();
     }
   }
 
   /*
    * Nothing found.
    */
-  return "";
+  return '';
 }
 
 /**
@@ -426,16 +413,16 @@ async function extractOrderDetails(page) {
    * Locate the specific Order Information section.
    */
   const orderInformation = page
-    .locator("div.labeled-div")
+    .locator('div.labeled-div')
     .filter({
-      has: page.locator("div.div-label").filter({
+      has: page.locator('div.div-label').filter({
         hasText: /^Order Information$/,
       }),
     })
     .first();
 
   await orderInformation.waitFor({
-    state: "visible",
+    state: 'visible',
     timeout: 30000,
   });
 
@@ -451,7 +438,7 @@ async function extractOrderDetails(page) {
    * ORDER INFORMATION TABLE
    * -----------------------------------------------
    */
-  const rows = orderInformation.locator("table.cp-table > tbody > tr.cp-row");
+  const rows = orderInformation.locator('table.cp-table > tbody > tr.cp-row');
 
   const rowCount = await rows.count();
 
@@ -487,7 +474,7 @@ async function extractOrderDetails(page) {
   for (let i = 0; i < rowCount; i++) {
     const row = rows.nth(i);
 
-    const cells = row.locator("td");
+    const cells = row.locator('td');
 
     const cellCount = await cells.count();
 
@@ -512,13 +499,12 @@ async function extractOrderDetails(page) {
      *
      * Continuation rows have an empty first <td>.
      */
-    let label =
-      (await cells.nth(0).textContent())?.replace(/\s+/g, " ").trim() || "";
+    let label = (await cells.nth(0).textContent())?.replace(/\s+/g, ' ').trim() || '';
 
     /*
      * Remove trailing colon.
      */
-    label = label.replace(/:\s*$/, "").trim();
+    label = label.replace(/:\s*$/, '').trim();
 
     /*
      * If this row has a label, this becomes the
@@ -534,7 +520,7 @@ async function extractOrderDetails(page) {
        * Initialize the field if it doesn't already exist.
        */
       if (!details[currentLabel]) {
-        details[currentLabel] = "";
+        details[currentLabel] = '';
       }
     }
 
@@ -560,7 +546,7 @@ async function extractOrderDetails(page) {
      *
      * It also works on continuation rows.
      */
-    const dataValues = row.locator(".dataValue");
+    const dataValues = row.locator('.dataValue');
 
     const dataValueCount = await dataValues.count();
 
@@ -586,10 +572,7 @@ async function extractOrderDetails(page) {
      */
     if (values.length === 0) {
       for (let cellIndex = 1; cellIndex < cellCount; cellIndex++) {
-        const value =
-          (await cells.nth(cellIndex).textContent())
-            ?.replace(/\s+/g, " ")
-            .trim() || "";
+        const value = (await cells.nth(cellIndex).textContent())?.replace(/\s+/g, ' ').trim() || '';
 
         if (value) {
           values.push(value);
@@ -631,12 +614,10 @@ async function extractOrderDetails(page) {
      *   "Verbal: 952961 HAMAMI ANWAR Signature pending. Readback successfully."
      */
     if (values.length > 0) {
-      const newValue = values.join(" ").trim();
+      const newValue = values.join(' ').trim();
 
       if (details[currentLabel]) {
-        details[currentLabel] = `${details[currentLabel]} ${newValue}`
-          .replace(/\s+/g, " ")
-          .trim();
+        details[currentLabel] = `${details[currentLabel]} ${newValue}`.replace(/\s+/g, ' ').trim();
       } else {
         details[currentLabel] = newValue;
       }
@@ -649,7 +630,7 @@ async function extractOrderDetails(page) {
    * fields.
    */
   return {
-    "Order Description": orderDescription,
+    'Order Description': orderDescription,
     ...details,
   };
 }
@@ -665,9 +646,9 @@ async function extractOrderDetails(page) {
  */
 async function extractAdministrations(page) {
   const administrationsSection = page
-    .locator("div.labeled-div")
+    .locator('div.labeled-div')
     .filter({
-      has: page.locator("div.div-label").filter({
+      has: page.locator('div.div-label').filter({
         hasText: /^Administrations$/,
       }),
     })
@@ -682,18 +663,18 @@ async function extractAdministrations(page) {
   const sectionCount = await administrationsSection.count();
 
   if (sectionCount === 0) {
-    console.log("Administrations section not present. Returning empty list.");
+    console.log('Administrations section not present. Returning empty list.');
 
     return [];
   }
 
   await administrationsSection.waitFor({
-    state: "visible",
+    state: 'visible',
     timeout: 10000,
   });
 
   const administrationRows = administrationsSection.locator(
-    "#resultlist cpsi-grid#list tbody#items tr[role='row']",
+    "#resultlist cpsi-grid#list tbody#items tr[role='row']"
   );
 
   /*
@@ -712,7 +693,7 @@ async function extractAdministrations(page) {
    * and the UI showing "EMPTY LIST".
    */
   if (count === 0) {
-    console.log("Administrations section is empty. Returning empty list.");
+    console.log('Administrations section is empty. Returning empty list.');
 
     return [];
   }
@@ -725,7 +706,7 @@ async function extractAdministrations(page) {
         return null;
       }
 
-      const slot = cell.querySelector("slot");
+      const slot = cell.querySelector('slot');
 
       if (!slot) {
         return null;
@@ -738,7 +719,7 @@ async function extractAdministrations(page) {
       let content = null;
 
       for (const element of assignedElements) {
-        if (element.matches("vaadin-grid-cell-content")) {
+        if (element.matches('vaadin-grid-cell-content')) {
           content = element;
           break;
         }
@@ -752,26 +733,26 @@ async function extractAdministrations(page) {
         const element = content.querySelector(`[ctrl-name="${ctrlName}"]`);
 
         if (!element) {
-          return "";
+          return '';
         }
 
-        return (element.textContent || "").replace(/\s+/g, " ").trim();
+        return (element.textContent || '').replace(/\s+/g, ' ').trim();
       }
 
-      const ariaRowIndex = rowElement.getAttribute("aria-rowindex");
+      const ariaRowIndex = rowElement.getAttribute('aria-rowindex');
 
       const rowNumber = ariaRowIndex ? Number(ariaRowIndex) : null;
 
       return {
         rowNumber,
-        Date: getValue("admin_date"),
-        Time: getValue("admin_time"),
-        Action: getValue("admin_action"),
-        Dose: getValue("admin_dose_unit"),
-        Route: getValue("admin_route"),
-        Site: getValue("admin_site"),
-        Credentials: getValue("admin_credentials"),
-        Scanned: getValue("scanned"),
+        Date: getValue('admin_date'),
+        Time: getValue('admin_time'),
+        Action: getValue('admin_action'),
+        Dose: getValue('admin_dose_unit'),
+        Route: getValue('admin_route'),
+        Site: getValue('admin_site'),
+        Credentials: getValue('admin_credentials'),
+        Scanned: getValue('scanned'),
       };
     });
   }
@@ -795,9 +776,7 @@ async function extractAdministrations(page) {
 
   administrations.sort((a, b) => a.rowNumber - b.rowNumber);
 
-  return administrations.map(
-    ({ rowNumber, ...administration }) => administration,
-  );
+  return administrations.map(({ rowNumber, ...administration }) => administration);
 }
 
 /**
@@ -808,23 +787,23 @@ async function extractAdministrations(page) {
  */
 async function scrollOrderGrid(page, amount = 250) {
   return await page
-    .locator("#order_chronology_listCtrl cpsi-grid#grid")
+    .locator('#order_chronology_listCtrl cpsi-grid#grid')
     .evaluate((grid, amount) => {
       const shadow = grid.shadowRoot;
 
       if (!shadow) {
         return {
           success: false,
-          reason: "Grid shadow root not found.",
+          reason: 'Grid shadow root not found.',
         };
       }
 
-      const items = shadow.querySelector("#items");
+      const items = shadow.querySelector('#items');
 
       if (!items) {
         return {
           success: false,
-          reason: "#items element not found.",
+          reason: '#items element not found.',
         };
       }
 
@@ -835,10 +814,7 @@ async function scrollOrderGrid(page, amount = 250) {
       while (element) {
         const style = getComputedStyle(element);
 
-        if (
-          /(auto|scroll)/.test(style.overflowY) &&
-          element.scrollHeight > element.clientHeight
-        ) {
+        if (/(auto|scroll)/.test(style.overflowY) && element.scrollHeight > element.clientHeight) {
           scrollable = element;
           break;
         }
@@ -885,10 +861,7 @@ async function scrollOrderGrid(page, amount = 250) {
 
       const before = scrollable.scrollTop;
 
-      const maxScrollTop = Math.max(
-        0,
-        scrollable.scrollHeight - scrollable.clientHeight,
-      );
+      const maxScrollTop = Math.max(0, scrollable.scrollHeight - scrollable.clientHeight);
 
       const targetScrollTop = Math.min(before + amount, maxScrollTop);
 
@@ -909,56 +882,51 @@ async function scrollOrderGrid(page, amount = 250) {
  * Return the virtualized grid to the top.
  */
 async function scrollOrderGridToTop(page) {
-  await page
-    .locator("#order_chronology_listCtrl cpsi-grid#grid")
-    .evaluate((grid) => {
-      const shadow = grid.shadowRoot;
+  await page.locator('#order_chronology_listCtrl cpsi-grid#grid').evaluate((grid) => {
+    const shadow = grid.shadowRoot;
 
-      if (!shadow) {
-        return;
+    if (!shadow) {
+      return;
+    }
+
+    const items = shadow.querySelector('#items');
+
+    if (!items) {
+      return;
+    }
+
+    let scrollable = null;
+
+    let element = items;
+
+    while (element) {
+      const style = getComputedStyle(element);
+
+      if (/(auto|scroll)/.test(style.overflowY) && element.scrollHeight > element.clientHeight) {
+        scrollable = element;
+        break;
       }
 
-      const items = shadow.querySelector("#items");
+      element = element.parentElement;
+    }
 
-      if (!items) {
-        return;
-      }
-
-      let scrollable = null;
-
-      let element = items;
+    if (!scrollable) {
+      element = items.parentElement;
 
       while (element) {
-        const style = getComputedStyle(element);
-
-        if (
-          /(auto|scroll)/.test(style.overflowY) &&
-          element.scrollHeight > element.clientHeight
-        ) {
+        if (element.scrollHeight > element.clientHeight) {
           scrollable = element;
           break;
         }
 
         element = element.parentElement;
       }
+    }
 
-      if (!scrollable) {
-        element = items.parentElement;
-
-        while (element) {
-          if (element.scrollHeight > element.clientHeight) {
-            scrollable = element;
-            break;
-          }
-
-          element = element.parentElement;
-        }
-      }
-
-      if (scrollable) {
-        scrollable.scrollTop = 0;
-      }
-    });
+    if (scrollable) {
+      scrollable.scrollTop = 0;
+    }
+  });
 
   /*
    * Allow the virtualized grid to recycle rows.
@@ -979,7 +947,7 @@ async function readVisibleOrderRows(page) {
   for (let i = 0; i < count; i++) {
     const row = rows.nth(i);
 
-    const ariaRowIndex = await row.getAttribute("aria-rowindex");
+    const ariaRowIndex = await row.getAttribute('aria-rowindex');
 
     const cells = row.locator("td[role='gridcell']");
 
@@ -995,9 +963,9 @@ async function readVisibleOrderRows(page) {
       values.push(await getCellValue(cells.nth(columnIndex)));
     }
 
-    const date = (values[0] || "").trim();
+    const date = (values[0] || '').trim();
 
-    const description = (values[1] || "").trim();
+    const description = (values[1] || '').trim();
 
     /*
      * Ignore rows that are currently being recycled.
@@ -1038,10 +1006,10 @@ async function extractOrders(page) {
   const initialRowCount = await rows.count();
 
   if (initialRowCount === 0) {
-    console.log("");
-    console.log("No Order Chronology data found.");
-    console.log("Returning empty order list.");
-    console.log("");
+    console.log('');
+    console.log('No Order Chronology data found.');
+    console.log('Returning empty order list.');
+    console.log('');
 
     return [];
   }
@@ -1066,7 +1034,7 @@ async function extractOrders(page) {
      *
      *     No Data Found
      */
-    if (date === "No Data Found" || description === "No Data Found") {
+    if (date === 'No Data Found' || description === 'No Data Found') {
       continue;
     }
 
@@ -1092,10 +1060,10 @@ async function extractOrders(page) {
    *     No Data Found
    */
   if (!hasActualOrderData) {
-    console.log("");
-    console.log("No Order Chronology data found.");
-    console.log("Returning empty order list.");
-    console.log("");
+    console.log('');
+    console.log('No Order Chronology data found.');
+    console.log('Returning empty order list.');
+    console.log('');
 
     return [];
   }
@@ -1109,9 +1077,9 @@ async function extractOrders(page) {
   let lastScrollTop = -1;
   let unchangedScrolls = 0;
 
-  console.log("");
-  console.log("Scanning entire Order Chronology grid...");
-  console.log("");
+  console.log('');
+  console.log('Scanning entire Order Chronology grid...');
+  console.log('');
 
   while (true) {
     await page.waitForTimeout(700);
@@ -1121,9 +1089,7 @@ async function extractOrders(page) {
     for (const visibleOrder of visibleOrders) {
       const { rowNumber, date, description, values } = visibleOrder;
 
-      const key = rowNumber
-        ? `${rowNumber}|${date}|${description}`
-        : `${date}|${description}`;
+      const key = rowNumber ? `${rowNumber}|${date}|${description}` : `${date}|${description}`;
 
       if (seen.has(key)) {
         continue;
@@ -1136,22 +1102,18 @@ async function extractOrders(page) {
       };
 
       ORDER_COLUMNS.forEach((column, index) => {
-        item[column] = values[index] || "";
+        item[column] = values[index] || '';
       });
 
       orders.push(item);
 
-      console.log(
-        `Extracted row ${item.rowNumber}: ` + `${date} | ${description}`,
-      );
+      console.log(`Extracted row ${item.rowNumber}: ` + `${date} | ${description}`);
     }
 
     const scrollResult = await scrollOrderGrid(page, 250);
 
     if (!scrollResult.success) {
-      throw new Error(
-        `Could not scroll Order Chronology: ` + scrollResult.reason,
-      );
+      throw new Error(`Could not scroll Order Chronology: ` + scrollResult.reason);
     }
 
     await page.waitForTimeout(700);
@@ -1164,9 +1126,7 @@ async function extractOrders(page) {
       for (const visibleOrder of finalVisibleOrders) {
         const { rowNumber, date, description, values } = visibleOrder;
 
-        const key = rowNumber
-          ? `${rowNumber}|${date}|${description}`
-          : `${date}|${description}`;
+        const key = rowNumber ? `${rowNumber}|${date}|${description}` : `${date}|${description}`;
 
         if (seen.has(key)) {
           continue;
@@ -1179,14 +1139,12 @@ async function extractOrders(page) {
         };
 
         ORDER_COLUMNS.forEach((column, index) => {
-          item[column] = values[index] || "";
+          item[column] = values[index] || '';
         });
 
         orders.push(item);
 
-        console.log(
-          `Extracted row ${item.rowNumber}: ` + `${date} | ${description}`,
-        );
+        console.log(`Extracted row ${item.rowNumber}: ` + `${date} | ${description}`);
       }
 
       break;
@@ -1221,17 +1179,17 @@ async function extractOrders(page) {
         `ORDER EXTRACTION VALIDATION FAILED.\n` +
           `Expected grid row ${expectedRowNumber}.\n` +
           `Found grid row ${orders[i].rowNumber}.\n` +
-          `Date: ${orders[i]["Start Date/Time"]}\n` +
-          `Description: ${orders[i].Description}`,
+          `Date: ${orders[i]['Start Date/Time']}\n` +
+          `Description: ${orders[i].Description}`
       );
     }
   }
 
   await scrollOrderGridToTop(page);
 
-  console.log("");
+  console.log('');
   console.log(`Total rows extracted: ${orders.length}`);
-  console.log("");
+  console.log('');
 
   return orders;
 }
@@ -1245,16 +1203,14 @@ async function extractOrders(page) {
 async function findOrderRow(page, expectedOrder) {
   await waitForOrderGrid(page);
 
-  const expectedDate = String(expectedOrder["Start Date/Time"] || "").trim();
+  const expectedDate = String(expectedOrder['Start Date/Time'] || '').trim();
 
-  const expectedDescription = String(expectedOrder.Description || "").trim();
+  const expectedDescription = String(expectedOrder.Description || '').trim();
 
   const targetRowNumber = Number(expectedOrder.rowNumber);
 
   console.log(
-    `Searching for row ${targetRowNumber}: ` +
-      `${expectedDate} | ` +
-      `${expectedDescription}`,
+    `Searching for row ${targetRowNumber}: ` + `${expectedDate} | ` + `${expectedDescription}`
   );
 
   await scrollOrderGridToTop(page);
@@ -1274,10 +1230,7 @@ async function findOrderRow(page, expectedOrder) {
      * Search actual row contents.
      */
     for (const visibleOrder of visibleOrders) {
-      if (
-        visibleOrder.date === expectedDate &&
-        visibleOrder.description === expectedDescription
-      ) {
+      if (visibleOrder.date === expectedDate && visibleOrder.description === expectedDescription) {
         console.log(`Found row ${targetRowNumber}.`);
 
         return visibleOrder.row;
@@ -1290,9 +1243,7 @@ async function findOrderRow(page, expectedOrder) {
     const scrollResult = await scrollOrderGrid(page, 250);
 
     if (!scrollResult.success) {
-      throw new Error(
-        `Could not scroll Order Chronology: ` + scrollResult.reason,
-      );
+      throw new Error(`Could not scroll Order Chronology: ` + scrollResult.reason);
     }
 
     await page.waitForTimeout(900);
@@ -1310,9 +1261,7 @@ async function findOrderRow(page, expectedOrder) {
           visibleOrder.date === expectedDate &&
           visibleOrder.description === expectedDescription
         ) {
-          console.log(
-            `Found row ${targetRowNumber} ` + `during final grid scan.`,
-          );
+          console.log(`Found row ${targetRowNumber} ` + `during final grid scan.`);
 
           return visibleOrder.row;
         }
@@ -1366,7 +1315,7 @@ async function order(page, visitKey) {
     // 1. Get account number
     // -----------------------------------------
 
-    const accountNumber = visitKey.split("V-").filter((x) => x.length > 0)[0];
+    const accountNumber = visitKey.split('V-').filter((x) => x.length > 0)[0];
 
     // -----------------------------------------
     // 2. Build URL
@@ -1381,14 +1330,14 @@ async function order(page, visitKey) {
       `&medical_records=true` +
       `&op=launch_charts_usher/mr_${accountNumber}_1/orderChronology`;
 
-    console.log("Opening:", url);
+    console.log('Opening:', url);
 
     // -----------------------------------------
     // 3. Navigate
     // -----------------------------------------
 
     await page.goto(url, {
-      waitUntil: "domcontentloaded",
+      waitUntil: 'domcontentloaded',
       timeout: 120000,
     });
 
@@ -1412,22 +1361,22 @@ async function order(page, visitKey) {
     // 6. Process every order
     // -----------------------------------------
 
-    console.log("");
-    console.log("Starting row-by-row processing...");
-    console.log("");
+    console.log('');
+    console.log('Starting row-by-row processing...');
+    console.log('');
 
     for (let index = 0; index < orders.length; index++) {
       const currentOrder = orders[index];
 
-      console.log("--------------------------------------------------");
+      console.log('--------------------------------------------------');
 
       console.log(
         `Opening row ${index + 1} of ` +
           `${orders.length} ` +
-          `(grid row ${currentOrder.rowNumber})`,
+          `(grid row ${currentOrder.rowNumber})`
       );
 
-      console.log(`Date: ${currentOrder["Start Date/Time"]}`);
+      console.log(`Date: ${currentOrder['Start Date/Time']}`);
 
       console.log(`Description: ${currentOrder.Description}`);
 
@@ -1441,8 +1390,8 @@ async function order(page, visitKey) {
         throw new Error(
           `Could not find order row.\n` +
             `Grid row: ${currentOrder.rowNumber}\n` +
-            `Date: ${currentOrder["Start Date/Time"]}\n` +
-            `Description: ${currentOrder.Description}`,
+            `Date: ${currentOrder['Start Date/Time']}\n` +
+            `Description: ${currentOrder.Description}`
         );
       }
 
@@ -1454,8 +1403,7 @@ async function order(page, visitKey) {
 
       if ((await cells.count()) < 3) {
         throw new Error(
-          `Matched row does not contain enough cells.\n` +
-            `Grid row: ${currentOrder.rowNumber}`,
+          `Matched row does not contain enough cells.\n` + `Grid row: ${currentOrder.rowNumber}`
         );
       }
 
@@ -1468,9 +1416,9 @@ async function order(page, visitKey) {
 
       const actualDescription = (await getCellValue(cells.nth(2))).trim();
 
-      const expectedDate = String(currentOrder["Start Date/Time"] || "").trim();
+      const expectedDate = String(currentOrder['Start Date/Time'] || '').trim();
 
-      const expectedDescription = String(currentOrder.Description || "").trim();
+      const expectedDescription = String(currentOrder.Description || '').trim();
 
       console.log(`Matched row: ${actualDate} | ${actualDescription}`);
 
@@ -1478,15 +1426,12 @@ async function order(page, visitKey) {
       // Never click the wrong order
       // -----------------------------------------
 
-      if (
-        actualDate !== expectedDate ||
-        actualDescription !== expectedDescription
-      ) {
+      if (actualDate !== expectedDate || actualDescription !== expectedDescription) {
         throw new Error(
           `ROW MISMATCH - refusing to click.\n` +
             `Grid row: ${currentOrder.rowNumber}\n` +
             `Expected: ${expectedDate} | ${expectedDescription}\n` +
-            `Found: ${actualDate} | ${actualDescription}`,
+            `Found: ${actualDate} | ${actualDescription}`
         );
       }
 
@@ -1509,53 +1454,48 @@ async function order(page, visitKey) {
 
       const finalDescription = (await getCellValue(cells.nth(2))).trim();
 
-      if (
-        finalDate !== expectedDate ||
-        finalDescription !== expectedDescription
-      ) {
+      if (finalDate !== expectedDate || finalDescription !== expectedDescription) {
         throw new Error(
           `ROW CHANGED BEFORE CLICK - refusing to click.\n` +
             `Expected: ${expectedDate} | ${expectedDescription}\n` +
-            `Found: ${finalDate} | ${finalDescription}`,
+            `Found: ${finalDate} | ${finalDescription}`
         );
       }
 
-      console.log("Double-clicking correct row...");
+      console.log('Double-clicking correct row...');
 
       await startDateCell.dblclick();
 
-      console.log("Order opened.");
+      console.log('Order opened.');
 
       // -----------------------------------------
       // Wait for Order Detail
       // -----------------------------------------
 
-      console.log("Waiting 6 seconds...");
+      console.log('Waiting 6 seconds...');
 
       await page.waitForTimeout(6000);
 
-      console.log("6 seconds completed.");
+      console.log('6 seconds completed.');
 
       // -----------------------------------------
       // ORDER DETAIL
       // -----------------------------------------
 
-      console.log("Extracting Order Detail...");
+      console.log('Extracting Order Detail...');
 
       const orderDetails = await extractOrderDetails(page);
 
-      console.log("Order Detail extracted.");
+      console.log('Order Detail extracted.');
 
-      currentOrder["order details"] = orderDetails;
+      currentOrder['order details'] = orderDetails;
 
-      if (!orderDetails["Order Description"]) {
-        console.warn(
-          "WARNING: Order Description was not found for this order.",
-        );
+      if (!orderDetails['Order Description']) {
+        console.warn('WARNING: Order Description was not found for this order.');
 
         console.warn(`Grid Description: ${currentOrder.Description}`);
       } else {
-        console.log(`Order Description: ${orderDetails["Order Description"]}`);
+        console.log(`Order Description: ${orderDetails['Order Description']}`);
       }
 
       console.log(JSON.stringify(orderDetails, null, 2));
@@ -1564,13 +1504,13 @@ async function order(page, visitKey) {
       // ADMINISTRATIONS
       // -----------------------------------------
 
-      console.log("Extracting Administrations...");
+      console.log('Extracting Administrations...');
 
       const administrations = await extractAdministrations(page);
 
-      console.log("Administrations extracted.");
+      console.log('Administrations extracted.');
 
-      currentOrder["administrations"] = administrations;
+      currentOrder['administrations'] = administrations;
 
       console.log(JSON.stringify(administrations, null, 2));
 
@@ -1578,25 +1518,21 @@ async function order(page, visitKey) {
       // BACK
       // -----------------------------------------
 
-      console.log("Clicking Back...");
+      console.log('Clicking Back...');
 
       const backButton = await findVisibleBackButton(page);
 
       if (!backButton) {
-        const backCount = await page
-          .locator('cpsi-button[title="Back"]')
-          .count();
+        const backCount = await page.locator('cpsi-button[title="Back"]').count();
 
-        throw new Error(
-          `No visible Back button found. ` + `Total Back buttons: ${backCount}`,
-        );
+        throw new Error(`No visible Back button found. ` + `Total Back buttons: ${backCount}`);
       }
 
       await backButton.scrollIntoViewIfNeeded();
 
       await backButton.click();
 
-      console.log("Back button clicked.");
+      console.log('Back button clicked.');
 
       // -----------------------------------------
       // Wait for chronology grid
@@ -1606,9 +1542,9 @@ async function order(page, visitKey) {
 
       await page.waitForTimeout(1500);
 
-      console.log("Returned to Order Chronology.");
+      console.log('Returned to Order Chronology.');
 
-      console.log("");
+      console.log('');
     }
 
     // -----------------------------------------
@@ -1623,7 +1559,7 @@ async function order(page, visitKey) {
     // 8. Save to database
     // -----------------------------------------
 
-    const result = await runPythonFunction("orders", [visitKey, orders]);
+    const result = await runPythonFunction('orders', [visitKey, orders]);
 
     if (result.success && result.result) {
       console.log(`Order data saved successfully for ${visitKey}.`);

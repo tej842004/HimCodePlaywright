@@ -1,4 +1,4 @@
-const { runPythonFunction } = require("../database/pythonRunner");
+const { runPythonFunction } = require('../database/pythonRunner');
 
 async function notes(page, visitKey) {
   try {
@@ -6,7 +6,7 @@ async function notes(page, visitKey) {
     // 1. Get account number
     // =========================================
 
-    const accountNumber = visitKey.split("V-").filter((x) => x.length > 0)[0];
+    const accountNumber = visitKey.split('V-').filter((x) => x.length > 0)[0];
 
     if (!accountNumber) {
       throw new Error(`Invalid visit key: ${visitKey}`);
@@ -25,37 +25,37 @@ async function notes(page, visitKey) {
       `&medical_records=true` +
       `&op=launch_charts_usher/mr_${accountNumber}_1/notes_runner`;
 
-    console.log("");
-    console.log("========================================");
-    console.log("PROCESSING NOTES");
-    console.log("========================================");
+    console.log('');
+    console.log('========================================');
+    console.log('PROCESSING NOTES');
+    console.log('========================================');
 
-    console.log("Visit Key:", visitKey);
-    console.log("Account Number:", accountNumber);
-    console.log("URL:", url);
+    console.log('Visit Key:', visitKey);
+    console.log('Account Number:', accountNumber);
+    console.log('URL:', url);
 
     // =========================================
     // 3. Open Notes page
     // =========================================
 
-    console.log("");
-    console.log("Opening Notes page...");
+    console.log('');
+    console.log('Opening Notes page...');
 
     await page.goto(url, {
-      waitUntil: "domcontentloaded",
+      waitUntil: 'domcontentloaded',
       timeout: 120000,
     });
 
     await page.waitForTimeout(5000);
 
-    console.log("Notes page loaded.");
+    console.log('Notes page loaded.');
 
     // =========================================
     // 4. Find frame containing Notes grid
     // =========================================
 
-    console.log("");
-    console.log("Searching all frames for Notes grid...");
+    console.log('');
+    console.log('Searching all frames for Notes grid...');
 
     await page.waitForTimeout(15 * 1000);
 
@@ -63,7 +63,7 @@ async function notes(page, visitKey) {
 
     for (const frame of page.frames()) {
       try {
-        const count = await frame.locator("hl2-note-list-grid").count();
+        const count = await frame.locator('hl2-note-list-grid').count();
 
         console.log(`Frame: ${frame.url()} -> hl2-note-list-grid = ${count}`);
 
@@ -77,25 +77,25 @@ async function notes(page, visitKey) {
     }
 
     if (!notesFrame) {
-      throw new Error("hl2-note-list-grid was not found in any frame.");
+      throw new Error('hl2-note-list-grid was not found in any frame.');
     }
 
-    console.log("Notes grid found.");
+    console.log('Notes grid found.');
 
     // =========================================
     // 5. Find AG Grid
     // =========================================
 
-    const noteListGrid = notesFrame.locator("hl2-note-list-grid");
+    const noteListGrid = notesFrame.locator('hl2-note-list-grid');
 
-    const agGrid = noteListGrid.locator("ag-grid-angular");
+    const agGrid = noteListGrid.locator('ag-grid-angular');
 
     await agGrid.waitFor({
-      state: "attached",
+      state: 'attached',
       timeout: 60000,
     });
 
-    console.log("AG Grid found.");
+    console.log('AG Grid found.');
 
     // =========================================
     // 6. Wait for grid to settle
@@ -108,12 +108,12 @@ async function notes(page, visitKey) {
 
     const rowCount = await rows.count();
 
-    console.log("");
-    console.log("========================================");
-    console.log("NOTES ROWS");
-    console.log("========================================");
+    console.log('');
+    console.log('========================================');
+    console.log('NOTES ROWS');
+    console.log('========================================');
 
-    console.log("Total rows:", rowCount);
+    console.log('Total rows:', rowCount);
 
     // =========================================
     // IMPORTANT:
@@ -122,9 +122,9 @@ async function notes(page, visitKey) {
     // =========================================
 
     if (rowCount === 0) {
-      console.log("");
-      console.log("No Notes found for this visit.");
-      console.log("Returning empty array: []");
+      console.log('');
+      console.log('No Notes found for this visit.');
+      console.log('Returning empty array: []');
 
       // =========================================
       // Save [] to database
@@ -132,10 +132,7 @@ async function notes(page, visitKey) {
 
       const emptyNotes = [];
 
-      const result = await runPythonFunction("notes_data", [
-        visitKey,
-        emptyNotes,
-      ]);
+      const result = await runPythonFunction('notes_data', [visitKey, emptyNotes]);
 
       if (result.success && result.result) {
         console.log(`Empty Notes data saved successfully for ${visitKey}.`);
@@ -164,7 +161,7 @@ async function notes(page, visitKey) {
       // We will use this ID to find the same
       // row again before clicking it.
 
-      const rowId = await row.getAttribute("row-id");
+      const rowId = await row.getAttribute('row-id');
 
       if (!rowId) {
         console.log(`WARNING: Row ${i} does not have row-id.`);
@@ -174,21 +171,21 @@ async function notes(page, visitKey) {
         const cell = row.locator(`[col-id="${colId}"]`);
 
         if ((await cell.count()) === 0) {
-          return "";
+          return '';
         }
 
-        return (await cell.textContent())?.trim() || "";
+        return (await cell.textContent())?.trim() || '';
       };
 
-      const visitNumber = await getCellText("data.visit.display");
+      const visitNumber = await getCellText('data.visit.display');
 
-      const noteType = await getCellText("2");
+      const noteType = await getCellText('2');
 
-      const chartedDateTime = await getCellText("3");
+      const chartedDateTime = await getCellText('3');
 
-      const signedDateTime = await getCellText("4");
+      const signedDateTime = await getCellText('4');
 
-      const enteredBy = await getCellText("5");
+      const enteredBy = await getCellText('5');
 
       notes.push({
         rowId,
@@ -197,12 +194,12 @@ async function notes(page, visitKey) {
         chartedDateTime,
         signedDateTime,
         enteredBy,
-        noteHtml: "",
+        noteHtml: '',
       });
     }
 
-    console.log("");
-    console.log("Metadata extracted:");
+    console.log('');
+    console.log('Metadata extracted:');
 
     console.log(JSON.stringify(notes, null, 2));
 
@@ -213,30 +210,30 @@ async function notes(page, visitKey) {
     for (let i = 0; i < notes.length; i++) {
       const note = notes[i];
 
-      console.log("");
-      console.log("========================================");
+      console.log('');
+      console.log('========================================');
       console.log(`PROCESSING NOTE ${i + 1} OF ${notes.length}`);
-      console.log("========================================");
+      console.log('========================================');
 
-      console.log("Row ID:", note.rowId);
-      console.log("Visit:", note.visitNumber);
-      console.log("Note Type:", note.noteType);
-      console.log("Charted:", note.chartedDateTime);
-      console.log("Signed:", note.signedDateTime);
-      console.log("Entered By:", note.enteredBy);
+      console.log('Row ID:', note.rowId);
+      console.log('Visit:', note.visitNumber);
+      console.log('Note Type:', note.noteType);
+      console.log('Charted:', note.chartedDateTime);
+      console.log('Signed:', note.signedDateTime);
+      console.log('Entered By:', note.enteredBy);
 
       // =======================================
       // 8A. Find EXACT same row again
       // =======================================
 
       if (!note.rowId) {
-        console.log("Skipping because row-id is missing.");
+        console.log('Skipping because row-id is missing.');
 
         continue;
       }
 
       const exactRow = agGrid.locator(
-        `.ag-center-cols-container [role="row"][row-id="${note.rowId}"]`,
+        `.ag-center-cols-container [role="row"][row-id="${note.rowId}"]`
       );
 
       // =======================================
@@ -245,13 +242,13 @@ async function notes(page, visitKey) {
 
       try {
         await exactRow.waitFor({
-          state: "attached",
+          state: 'attached',
           timeout: 10000,
         });
       } catch (error) {
         console.log(`Row ${note.rowId} is not currently rendered.`);
 
-        console.log("This is likely AG Grid virtualization.");
+        console.log('This is likely AG Grid virtualization.');
 
         // Try scrolling the grid to bring the row
         // into the DOM.
@@ -261,7 +258,7 @@ async function notes(page, visitKey) {
 
           if (row) {
             row.scrollIntoView({
-              block: "center",
+              block: 'center',
             });
           }
         }, note.rowId);
@@ -271,11 +268,11 @@ async function notes(page, visitKey) {
         // Find it again after scrolling.
 
         const retryRow = agGrid.locator(
-          `.ag-center-cols-container [role="row"][row-id="${note.rowId}"]`,
+          `.ag-center-cols-container [role="row"][row-id="${note.rowId}"]`
         );
 
         await retryRow.waitFor({
-          state: "attached",
+          state: 'attached',
           timeout: 10000,
         });
       }
@@ -285,11 +282,11 @@ async function notes(page, visitKey) {
       // =======================================
 
       const targetRow = agGrid.locator(
-        `.ag-center-cols-container [role="row"][row-id="${note.rowId}"]`,
+        `.ag-center-cols-container [role="row"][row-id="${note.rowId}"]`
       );
 
       await targetRow.waitFor({
-        state: "attached",
+        state: 'attached',
         timeout: 15000,
       });
 
@@ -297,47 +294,43 @@ async function notes(page, visitKey) {
       // 8D. Verify row identity BEFORE click
       // =======================================
 
-      const actualRowId = await targetRow.getAttribute("row-id");
+      const actualRowId = await targetRow.getAttribute('row-id');
 
-      console.log("Row ID before click:", actualRowId);
+      console.log('Row ID before click:', actualRowId);
 
       if (actualRowId !== note.rowId) {
-        throw new Error(
-          `Row mismatch before click. Expected ${note.rowId}, got ${actualRowId}`,
-        );
+        throw new Error(`Row mismatch before click. Expected ${note.rowId}, got ${actualRowId}`);
       }
 
       // =======================================
       // 8E. Click EXACT row
       // =======================================
 
-      console.log("Clicking exact row...");
+      console.log('Clicking exact row...');
 
       await targetRow.click();
 
-      console.log("Exact row clicked.");
+      console.log('Exact row clicked.');
 
       // =======================================
       // 8F. Wait for note HTML
       // =======================================
 
-      let noteHtml = "";
+      let noteHtml = '';
 
-      console.log("Waiting for note content...");
+      console.log('Waiting for note content...');
 
       // First try renderedtemplate.
 
-      const renderedTemplate = notesFrame.locator("renderedtemplate");
+      const renderedTemplate = notesFrame.locator('renderedtemplate');
 
       try {
         await renderedTemplate.first().waitFor({
-          state: "attached",
+          state: 'attached',
           timeout: 10000,
         });
 
-        noteHtml = await renderedTemplate
-          .first()
-          .evaluate((el) => el.outerHTML);
+        noteHtml = await renderedTemplate.first().evaluate((el) => el.outerHTML);
       } catch (error) {
         // Ignore and try fallback.
       }
@@ -347,11 +340,11 @@ async function notes(page, visitKey) {
       // =======================================
 
       if (!noteHtml) {
-        const noteContainer = notesFrame.locator(".note-content-container");
+        const noteContainer = notesFrame.locator('.note-content-container');
 
         try {
           await noteContainer.first().waitFor({
-            state: "attached",
+            state: 'attached',
             timeout: 10000,
           });
 
@@ -367,12 +360,12 @@ async function notes(page, visitKey) {
 
       note.noteHtml = noteHtml;
 
-      console.log("Note HTML length:", noteHtml.length);
+      console.log('Note HTML length:', noteHtml.length);
 
       if (noteHtml) {
-        console.log("Note HTML successfully extracted.");
+        console.log('Note HTML successfully extracted.');
       } else {
-        console.log("WARNING: Note HTML was empty.");
+        console.log('WARNING: Note HTML was empty.');
       }
 
       // =======================================
@@ -386,20 +379,20 @@ async function notes(page, visitKey) {
     // 9. Final result
     // =========================================
 
-    console.log("");
-    console.log("========================================");
-    console.log("FINAL NOTES RESULT");
-    console.log("========================================");
+    console.log('');
+    console.log('========================================');
+    console.log('FINAL NOTES RESULT');
+    console.log('========================================');
 
     console.log(JSON.stringify(notes, null, 2));
 
-    console.log("========================================");
+    console.log('========================================');
 
     // =========================================
     // 10. Save to database
     // =========================================
 
-    const result = await runPythonFunction("notes_data", [visitKey, notes]);
+    const result = await runPythonFunction('notes_data', [visitKey, notes]);
 
     if (result.success && result.result) {
       console.log(`Notes data saved successfully for ${visitKey}.`);
@@ -413,10 +406,10 @@ async function notes(page, visitKey) {
 
     return notes;
   } catch (error) {
-    console.error("");
-    console.error("========================================");
+    console.error('');
+    console.error('========================================');
     console.error(`Error processing notes for ${visitKey}:`);
-    console.error("========================================");
+    console.error('========================================');
 
     console.error(error);
 

@@ -1,4 +1,4 @@
-const { runPythonFunction } = require("../database/pythonRunner");
+const { runPythonFunction } = require('../database/pythonRunner');
 
 async function transcriptions(page, visitKey) {
   try {
@@ -6,7 +6,7 @@ async function transcriptions(page, visitKey) {
     // 1. Get account number
     // -----------------------------------------
 
-    const accountNumber = visitKey.split("V-").filter((x) => x.length > 0)[0];
+    const accountNumber = visitKey.split('V-').filter((x) => x.length > 0)[0];
 
     // -----------------------------------------
     // 2. Build URL
@@ -21,14 +21,14 @@ async function transcriptions(page, visitKey) {
       `&medical_records=true` +
       `&op=launch_charts_usher/mr_${accountNumber}_1/patTranscriptions`;
 
-    console.log("Opening:", url);
+    console.log('Opening:', url);
 
     // -----------------------------------------
     // 3. Navigate
     // -----------------------------------------
 
     await page.goto(url, {
-      waitUntil: "domcontentloaded",
+      waitUntil: 'domcontentloaded',
       timeout: 120000,
     });
 
@@ -38,12 +38,10 @@ async function transcriptions(page, visitKey) {
     // 4. Wait for grid
     // -----------------------------------------
 
-    const transactionGrid = page
-      .locator("cpsi-grid#grid")
-      .filter({ hasText: "Department" });
+    const transactionGrid = page.locator('cpsi-grid#grid').filter({ hasText: 'Department' });
 
     await transactionGrid.waitFor({
-      state: "visible",
+      state: 'visible',
       timeout: 120000,
     });
 
@@ -53,43 +51,37 @@ async function transcriptions(page, visitKey) {
 
     const transactions = await transactionGrid.evaluate((gridHost) => {
       if (!gridHost) {
-        throw new Error("#grid not found");
+        throw new Error('#grid not found');
       }
 
-      const columnEls = gridHost.querySelectorAll("cpsi-grid-column");
+      const columnEls = gridHost.querySelectorAll('cpsi-grid-column');
 
       const columnCount = columnEls.length;
 
       if (columnCount === 0) {
-        throw new Error("No cpsi-grid-column elements found");
+        throw new Error('No cpsi-grid-column elements found');
       }
 
       const headers = [];
 
       for (let i = 0; i < columnCount; i++) {
         const headerSlot = gridHost.querySelector(
-          `vaadin-grid-cell-content[slot="vaadin-grid-cell-content-${i}"]`,
+          `vaadin-grid-cell-content[slot="vaadin-grid-cell-content-${i}"]`
         );
 
-        const sorter = headerSlot
-          ? headerSlot.querySelector("cpsi-grid-sorter")
-          : null;
+        const sorter = headerSlot ? headerSlot.querySelector('cpsi-grid-sorter') : null;
 
         headers.push(sorter ? sorter.textContent.trim() : `col${i}`);
       }
 
-      const allCellContents = gridHost.querySelectorAll(
-        "vaadin-grid-cell-content",
-      );
+      const allCellContents = gridHost.querySelectorAll('vaadin-grid-cell-content');
 
       const dataCells = [];
 
       allCellContents.forEach((cellEl) => {
-        const slotAttr = cellEl.getAttribute("slot");
+        const slotAttr = cellEl.getAttribute('slot');
 
-        const match = slotAttr
-          ? slotAttr.match(/vaadin-grid-cell-content-(\d+)/)
-          : null;
+        const match = slotAttr ? slotAttr.match(/vaadin-grid-cell-content-(\d+)/) : null;
 
         if (match) {
           const idx = parseInt(match[1], 10);
@@ -112,11 +104,9 @@ async function transcriptions(page, visitKey) {
 
         const colIdx = relativeIdx % columnCount;
 
-        const span = item.el.querySelector("span[title]");
+        const span = item.el.querySelector('span[title]');
 
-        const text = span
-          ? span.getAttribute("title").trim()
-          : item.el.textContent.trim();
+        const text = span ? span.getAttribute('title').trim() : item.el.textContent.trim();
 
         if (!rowsMap[rowIdx]) {
           rowsMap[rowIdx] = {};
@@ -130,9 +120,7 @@ async function transcriptions(page, visitKey) {
       Object.keys(rowsMap).forEach((rowIdx) => {
         const row = rowsMap[rowIdx];
 
-        const hasData = Object.values(row).some(
-          (value) => value && value.length > 0,
-        );
+        const hasData = Object.values(row).some((value) => value && value.length > 0);
 
         if (hasData) {
           results.push(row);
@@ -154,10 +142,7 @@ async function transcriptions(page, visitKey) {
     // 7. Save to database
     // -----------------------------------------
 
-    const result = await runPythonFunction("insert_transectiondata", [
-      visitKey,
-      transactions,
-    ]);
+    const result = await runPythonFunction('insert_transectiondata', [visitKey, transactions]);
 
     if (result.success && result.result) {
       console.log(`Transaction data saved successfully for ${visitKey}.`);

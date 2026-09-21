@@ -1,9 +1,9 @@
-require("dotenv").config();
+require('dotenv').config();
 
-const { chromium } = require("playwright");
+const { chromium } = require('playwright');
 
-const { login } = require("./login");
-const { order } = require("./orders");
+const { login } = require('./login');
+const { order } = require('./orders');
 
 async function main() {
   const browser = await chromium.launch({
@@ -19,11 +19,11 @@ async function main() {
   try {
     await login(page);
 
-    console.log("Login completed.");
+    console.log('Login completed.');
 
     const orders = await order(page);
 
-    console.log("\nFINAL JSON:");
+    console.log('\nFINAL JSON:');
 
     console.log(JSON.stringify(orders, null, 2));
 
@@ -32,10 +32,10 @@ async function main() {
      */
     await new Promise((resolve) => setTimeout(resolve, 60000));
   } catch (error) {
-    console.error("\nORDER WORKFLOW FAILED");
+    console.error('\nORDER WORKFLOW FAILED');
     console.error(error);
   } finally {
-    console.log("Closing browser...");
+    console.log('Closing browser...');
 
     await browser.close();
   }
