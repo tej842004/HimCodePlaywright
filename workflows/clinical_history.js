@@ -1,4 +1,4 @@
-const { runPythonFunction } = require("../database/pythonRunner");
+const { runPythonFunction } = require('../database/pythonRunner');
 
 async function clinical_history(page, visitKey) {
   try {
@@ -6,7 +6,7 @@ async function clinical_history(page, visitKey) {
     // 1. Get account number
     // =====================================================
 
-    const accountNumber = visitKey.split("V-").filter((x) => x.length > 0)[0];
+    const accountNumber = visitKey.split('V-').filter((x) => x.length > 0)[0];
 
     if (!accountNumber) {
       throw new Error(`Invalid visit key: ${visitKey}`);
@@ -25,7 +25,7 @@ async function clinical_history(page, visitKey) {
       `&medical_records=true` +
       `&op=launch_charts_usher/mr_${accountNumber}_1/patCH`;
 
-    console.log("Opening Clinical History page...");
+    console.log('Opening Clinical History page...');
     console.log(url);
 
     // =====================================================
@@ -33,32 +33,32 @@ async function clinical_history(page, visitKey) {
     // =====================================================
 
     await page.goto(url, {
-      waitUntil: "domcontentloaded",
+      waitUntil: 'domcontentloaded',
       timeout: 120000,
     });
 
     await page.waitForTimeout(5000);
 
-    console.log("Clinical History page loaded.");
+    console.log('Clinical History page loaded.');
 
     // =====================================================
     // 4. Find the EXACT Clinical History grid
     // =====================================================
 
-    console.log("Waiting for Clinical History grid...");
+    console.log('Waiting for Clinical History grid...');
 
     await page.waitForFunction(
       () => {
         function findListMapCtrl(root) {
           if (!root) return null;
 
-          const direct = root.querySelector?.("#listMapCtrl");
+          const direct = root.querySelector?.('#listMapCtrl');
 
           if (direct) {
             return direct;
           }
 
-          const all = root.querySelectorAll?.("*") || [];
+          const all = root.querySelectorAll?.('*') || [];
 
           for (const el of all) {
             if (el.shadowRoot) {
@@ -87,10 +87,10 @@ async function clinical_history(page, visitKey) {
       },
       {
         timeout: 120000,
-      },
+      }
     );
 
-    console.log("#listMapCtrl found.");
+    console.log('#listMapCtrl found.');
 
     // =====================================================
     // 5. Wait until rows actually exist
@@ -108,7 +108,7 @@ async function clinical_history(page, visitKey) {
     //
     // =====================================================
 
-    console.log("Waiting for Clinical History rows...");
+    console.log('Waiting for Clinical History rows...');
 
     await page.waitForFunction(
       () => {
@@ -121,7 +121,7 @@ async function clinical_history(page, visitKey) {
             return direct;
           }
 
-          const elements = root.querySelectorAll?.("*") || [];
+          const elements = root.querySelectorAll?.('*') || [];
 
           for (const el of elements) {
             if (el.shadowRoot) {
@@ -137,14 +137,14 @@ async function clinical_history(page, visitKey) {
         }
 
         // Find the specific listMapCtrl
-        const listMapCtrl = findElement(document, "#listMapCtrl");
+        const listMapCtrl = findElement(document, '#listMapCtrl');
 
         if (!listMapCtrl) {
           return false;
         }
 
         // cp-listctrl
-        const listCtrl = listMapCtrl.querySelector("cp-listctrl");
+        const listCtrl = listMapCtrl.querySelector('cp-listctrl');
 
         if (!listCtrl) {
           return false;
@@ -156,7 +156,7 @@ async function clinical_history(page, visitKey) {
         }
 
         // Exact grid
-        const grid = listCtrl.shadowRoot.querySelector("cpsi-grid#grid");
+        const grid = listCtrl.shadowRoot.querySelector('cpsi-grid#grid');
 
         if (!grid) {
           return false;
@@ -168,7 +168,7 @@ async function clinical_history(page, visitKey) {
         }
 
         // Actual row container
-        const items = grid.shadowRoot.querySelector("#items");
+        const items = grid.shadowRoot.querySelector('#items');
 
         if (!items) {
           return false;
@@ -183,10 +183,10 @@ async function clinical_history(page, visitKey) {
       },
       {
         timeout: 120000,
-      },
+      }
     );
 
-    console.log("Clinical History rows found.");
+    console.log('Clinical History rows found.');
 
     // =====================================================
     // 6. Extract rows
@@ -206,7 +206,7 @@ async function clinical_history(page, visitKey) {
           return direct;
         }
 
-        const elements = root.querySelectorAll?.("*") || [];
+        const elements = root.querySelectorAll?.('*') || [];
 
         for (const el of elements) {
           if (el.shadowRoot) {
@@ -225,57 +225,55 @@ async function clinical_history(page, visitKey) {
       // Find listMapCtrl
       // ---------------------------------------------------
 
-      const listMapCtrl = findElement(document, "#listMapCtrl");
+      const listMapCtrl = findElement(document, '#listMapCtrl');
 
       if (!listMapCtrl) {
-        throw new Error("#listMapCtrl not found");
+        throw new Error('#listMapCtrl not found');
       }
 
       // ---------------------------------------------------
       // Find cp-listctrl
       // ---------------------------------------------------
 
-      const listCtrl = listMapCtrl.querySelector("cp-listctrl");
+      const listCtrl = listMapCtrl.querySelector('cp-listctrl');
 
       if (!listCtrl) {
-        throw new Error("cp-listctrl not found");
+        throw new Error('cp-listctrl not found');
       }
 
       if (!listCtrl.shadowRoot) {
-        throw new Error("cp-listctrl shadowRoot not found");
+        throw new Error('cp-listctrl shadowRoot not found');
       }
 
       // ---------------------------------------------------
       // Find exact grid
       // ---------------------------------------------------
 
-      const grid = listCtrl.shadowRoot.querySelector("cpsi-grid#grid");
+      const grid = listCtrl.shadowRoot.querySelector('cpsi-grid#grid');
 
       if (!grid) {
-        throw new Error("cpsi-grid#grid not found");
+        throw new Error('cpsi-grid#grid not found');
       }
 
       if (!grid.shadowRoot) {
-        throw new Error("cpsi-grid shadowRoot not found");
+        throw new Error('cpsi-grid shadowRoot not found');
       }
 
       // ---------------------------------------------------
       // Find row container
       // ---------------------------------------------------
 
-      const items = grid.shadowRoot.querySelector("#items");
+      const items = grid.shadowRoot.querySelector('#items');
 
       if (!items) {
-        throw new Error("#items not found");
+        throw new Error('#items not found');
       }
 
       // ---------------------------------------------------
       // Get actual body rows
       // ---------------------------------------------------
 
-      const rows = Array.from(
-        items.querySelectorAll('tr[role="row"][aria-rowindex]'),
-      );
+      const rows = Array.from(items.querySelectorAll('tr[role="row"][aria-rowindex]'));
 
       console.log(`[Browser] Actual Clinical History rows: ${rows.length}`);
 
@@ -285,7 +283,7 @@ async function clinical_history(page, visitKey) {
 
       function getSlotText(slotName) {
         if (!slotName) {
-          return "";
+          return '';
         }
 
         /*
@@ -304,14 +302,14 @@ async function clinical_history(page, visitKey) {
          */
 
         const content = grid.querySelector(
-          `vaadin-grid-cell-content[slot="${CSS.escape(slotName)}"]`,
+          `vaadin-grid-cell-content[slot="${CSS.escape(slotName)}"]`
         );
 
         if (!content) {
-          return "";
+          return '';
         }
 
-        return content.textContent.replace(/\s+/g, " ").trim();
+        return content.textContent.replace(/\s+/g, ' ').trim();
       }
 
       // ---------------------------------------------------
@@ -319,19 +317,19 @@ async function clinical_history(page, visitKey) {
       // ---------------------------------------------------
 
       function extractRow(row) {
-        const cells = Array.from(row.querySelectorAll(":scope > td"));
+        const cells = Array.from(row.querySelectorAll(':scope > td'));
 
         const values = [];
 
         for (const cell of cells) {
-          const slot = cell.querySelector("slot");
+          const slot = cell.querySelector('slot');
 
           if (!slot) {
-            values.push("");
+            values.push('');
             continue;
           }
 
-          const slotName = slot.getAttribute("name");
+          const slotName = slot.getAttribute('name');
 
           values.push(getSlotText(slotName));
         }
@@ -352,15 +350,15 @@ async function clinical_history(page, visitKey) {
          */
 
         return {
-          type: values[1] || "",
-          description: values[2] || "",
-          signedBy: values[3] || "",
-          acctNumber: values[4] || "",
-          date: values[5] || "",
-          admitDate: values[6] || "",
-          dischargeDate: values[7] || "",
-          pacs: values[8] || "",
-          attachments: values[9] || "",
+          type: values[1] || '',
+          description: values[2] || '',
+          signedBy: values[3] || '',
+          acctNumber: values[4] || '',
+          date: values[5] || '',
+          admitDate: values[6] || '',
+          dischargeDate: values[7] || '',
+          pacs: values[8] || '',
+          attachments: values[9] || '',
         };
       }
 
@@ -374,7 +372,7 @@ async function clinical_history(page, visitKey) {
         const result = extractRow(row);
 
         // Ignore completely empty rows
-        const hasData = Object.values(result).some((value) => value !== "");
+        const hasData = Object.values(result).some((value) => value !== '');
 
         if (hasData) {
           results.push(result);
@@ -388,25 +386,22 @@ async function clinical_history(page, visitKey) {
     // 7. Print result
     // =====================================================
 
-    console.log("");
-    console.log("========================================");
-    console.log("CLINICAL HISTORY RESULT");
-    console.log("========================================");
+    console.log('');
+    console.log('========================================');
+    console.log('CLINICAL HISTORY RESULT');
+    console.log('========================================');
 
     console.log(`Rows found: ${results.length}`);
 
     console.log(JSON.stringify(results, null, 2));
 
-    console.log("========================================");
+    console.log('========================================');
 
     // -----------------------------------------
     // 8. Save to database
     // -----------------------------------------
 
-    const databaseResult = await runPythonFunction("clinical_history", [
-      visitKey,
-      results,
-    ]);
+    const databaseResult = await runPythonFunction('clinical_history', [visitKey, results]);
 
     if (databaseResult.success && databaseResult.result) {
       console.log(`Clinical History data saved successfully for ${visitKey}.`);

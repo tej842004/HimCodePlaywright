@@ -1,5 +1,5 @@
-require("dotenv").config();
-const { Pool } = require("pg");
+require('dotenv').config();
+const { Pool } = require('pg');
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -25,7 +25,7 @@ async function getUncodedVisits() {
 
   return result.rows.map((row) => ({
     visitKey: row.visit_key,
-    visitNumber: row.visit_key.replace(/^V-/, ""),
+    visitNumber: row.visit_key.replace(/^V-/, ''),
   }));
 }
 
@@ -37,7 +37,7 @@ async function getPendingVisitKeys() {
   const query = `
     SELECT visit_key
     FROM warehouse.him_patient_document
-    WHERE notes IS NULL AND updatedtime IS NULL;
+    WHERE updatedtime IS NULL;
   `;
 
   const result = await pool.query(query);

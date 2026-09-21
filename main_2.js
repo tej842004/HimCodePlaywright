@@ -1,17 +1,17 @@
-require("dotenv").config();
+require('dotenv').config();
 
-const { chromium } = require("playwright");
+const { chromium } = require('playwright');
 
-const { login } = require("./workflows/login");
-const { transcriptions } = require("./workflows/transcriptions");
-const { charges } = require("./workflows/charges");
-const { problemlist } = require("./workflows/problemlist");
-const { clinical_history } = require("./workflows/clinical_history");
-const { order } = require("./workflows/orders");
-const { notes } = require("./workflows/notes");
+const { login } = require('./workflows/login');
+const { transcriptions } = require('./workflows/transcriptions');
+const { charges } = require('./workflows/charges');
+const { problemlist } = require('./workflows/problemlist');
+const { clinical_history } = require('./workflows/clinical_history');
+const { order } = require('./workflows/orders');
+const { notes } = require('./workflows/notes');
 
-const { runPythonFunction } = require("./database/pythonRunner");
-const { getPendingVisitKeys, closeDatabase } = require("./database/database");
+const { runPythonFunction } = require('./database/pythonRunner');
+const { getPendingVisitKeys, closeDatabase } = require('./database/database');
 
 async function main() {
   let browser;
@@ -21,7 +21,7 @@ async function main() {
     // 1. Start browser
     // =====================================================
 
-    console.log("Starting browser...");
+    console.log('Starting browser...');
 
     browser = await chromium.launch({
       headless: false,
@@ -45,27 +45,27 @@ async function main() {
 
     await login(page);
 
-    console.log("Login completed.");
+    console.log('Login completed.');
 
     // =====================================================
     // 5. Get visit keys from database
     // =====================================================
 
-    console.log("");
-    console.log("========================================");
-    console.log("GETTING VISITS FROM DATABASE");
-    console.log("========================================");
+    console.log('');
+    console.log('========================================');
+    console.log('GETTING VISITS FROM DATABASE');
+    console.log('========================================');
 
     const visitKeys = await getPendingVisitKeys();
 
     console.log(`Total visits found: ${visitKeys.length}`);
 
     if (visitKeys.length === 0) {
-      console.log("No visits found where updatedtime IS NULL.");
+      console.log('No visits found where updatedtime IS NULL.');
       return;
     }
 
-    console.log("Visit keys:");
+    console.log('Visit keys:');
 
     visitKeys.forEach((visitKey, index) => {
       console.log(`${index + 1}. ${visitKey}`);
@@ -76,17 +76,17 @@ async function main() {
     // =====================================================
 
     for (const visitKey of visitKeys) {
-      console.log("");
-      console.log("========================================");
+      console.log('');
+      console.log('========================================');
       console.log(`STARTING VISIT: ${visitKey}`);
-      console.log("========================================");
+      console.log('========================================');
 
       try {
         // -----------------------------------------------
         // TRANSCRIPTIONS
         // -----------------------------------------------
 
-        console.log("");
+        console.log('');
         console.log(`Running transcriptions for ${visitKey}...`);
 
         const transcriptionData = await transcriptions(page, visitKey);
@@ -97,7 +97,7 @@ async function main() {
         // CHARGES
         // -----------------------------------------------
 
-        console.log("");
+        console.log('');
         console.log(`Running charges for ${visitKey}...`);
 
         const chargeData = await charges(page, visitKey);
@@ -108,7 +108,7 @@ async function main() {
         // PROBLEM LIST
         // -----------------------------------------------
 
-        console.log("");
+        console.log('');
         console.log(`Running problem list for ${visitKey}...`);
 
         const problemListData = await problemlist(page, visitKey);
@@ -119,7 +119,7 @@ async function main() {
         // CLINICAL HISTORY
         // -----------------------------------------------
 
-        console.log("");
+        console.log('');
         console.log(`Running clinical history for ${visitKey}...`);
 
         await clinical_history(page, visitKey);
@@ -130,7 +130,7 @@ async function main() {
         // ORDER CHRONOLOGY
         // -----------------------------------------------
 
-        console.log("");
+        console.log('');
         console.log(`Running order chronology for ${visitKey}...`);
 
         await order(page, visitKey);
@@ -141,7 +141,7 @@ async function main() {
         // NOTES
         // -----------------------------------------------
 
-        console.log("");
+        console.log('');
         console.log(`Running notes for ${visitKey}...`);
 
         const notesData = await notes(page, visitKey);
@@ -152,7 +152,7 @@ async function main() {
         // BUILD combine_json
         // -----------------------------------------------
 
-        let combine_json = "";
+        let combine_json = '';
 
         combine_json += `Visit_key :${visitKey}`;
 
@@ -168,36 +168,30 @@ async function main() {
         // INSERT ENCOUNTER AI CODE SNAPSHOT
         // -----------------------------------------------
 
-        console.log("");
+        console.log('');
         console.log(`Saving encounter AI code snapshot for ${visitKey}...`);
 
         const snapshotResult = await runPythonFunction(
-          "insert_encounter_ai_code_snapshot",
-          [visitKey, combine_json, "mistral-small-latest"],
+          'insert_encounter_ai_code_snapshot',
+          [visitKey, combine_json, 'mistral-small-latest']
           //[visitKey, combine_json, "zai-glm-5-2"],
           // [visitKey, combine_json, "GPT-5.6 Sol"],
         );
 
         if (snapshotResult.success && snapshotResult.result) {
-          console.log(
-            `Encounter AI code snapshot saved successfully for ${visitKey}.`,
-          );
+          console.log(`Encounter AI code snapshot saved successfully for ${visitKey}.`);
         } else {
-          console.log(
-            `Encounter AI code snapshot was NOT saved for ${visitKey}.`,
-          );
+          console.log(`Encounter AI code snapshot was NOT saved for ${visitKey}.`);
         }
 
         // -----------------------------------------------
         // UPDATE TIME
         // -----------------------------------------------
 
-        console.log("");
+        console.log('');
         console.log(`Updating time for ${visitKey}...`);
 
-        const updateTimeResult = await runPythonFunction("updatetime", [
-          visitKey,
-        ]);
+        const updateTimeResult = await runPythonFunction('updatetime', [visitKey]);
 
         if (updateTimeResult.success && updateTimeResult.result) {
           console.log(`Time updated successfully for ${visitKey}.`);
@@ -209,12 +203,12 @@ async function main() {
         // VISIT COMPLETED
         // -----------------------------------------------
 
-        console.log("");
-        console.log("========================================");
+        console.log('');
+        console.log('========================================');
         console.log(`VISIT COMPLETED: ${visitKey}`);
-        console.log("========================================");
+        console.log('========================================');
       } catch (error) {
-        console.error("");
+        console.error('');
         console.error(`FAILED VISIT: ${visitKey}`);
         console.error(error);
 
@@ -223,12 +217,12 @@ async function main() {
       }
     }
 
-    console.log("");
-    console.log("========================================");
-    console.log("ALL VISITS COMPLETED");
-    console.log("========================================");
+    console.log('');
+    console.log('========================================');
+    console.log('ALL VISITS COMPLETED');
+    console.log('========================================');
   } catch (error) {
-    console.error("MAIN WORKFLOW FAILED:");
+    console.error('MAIN WORKFLOW FAILED:');
     console.error(error);
   } finally {
     // =====================================================
@@ -236,7 +230,7 @@ async function main() {
     // =====================================================
 
     if (browser) {
-      console.log("Closing browser...");
+      console.log('Closing browser...');
       await browser.close();
     }
 
@@ -246,9 +240,9 @@ async function main() {
 
     try {
       await closeDatabase();
-      console.log("Database connection closed.");
+      console.log('Database connection closed.');
     } catch (error) {
-      console.error("Error closing database:", error);
+      console.error('Error closing database:', error);
     }
   }
 }

@@ -1,4 +1,4 @@
-const { runPythonFunction } = require("../database/pythonRunner");
+const { runPythonFunction } = require('../database/pythonRunner');
 
 async function problemlist(page, visitKey) {
   try {
@@ -6,7 +6,7 @@ async function problemlist(page, visitKey) {
     // 1. Get account number
     // -----------------------------------------
 
-    const accountNumber = visitKey.split("V-").filter((x) => x.length > 0)[0];
+    const accountNumber = visitKey.split('V-').filter((x) => x.length > 0)[0];
 
     if (!accountNumber) {
       throw new Error(`Invalid visit key: ${visitKey}`);
@@ -25,39 +25,39 @@ async function problemlist(page, visitKey) {
       `&medical_records=true` +
       `&op=launch_charts_usher/mr_${accountNumber}_1/problist`;
 
-    console.log("Opening:", url);
+    console.log('Opening:', url);
 
     // -----------------------------------------
     // 3. Navigate
     // -----------------------------------------
 
     await page.goto(url, {
-      waitUntil: "domcontentloaded",
+      waitUntil: 'domcontentloaded',
       timeout: 120000,
     });
 
     await page.waitForTimeout(5 * 1000);
 
-    console.log("Problem List page loaded.");
+    console.log('Problem List page loaded.');
 
     // -----------------------------------------
     // 4. Click "All" radio button
     // -----------------------------------------
 
-    console.log("Clicking All radio button...");
+    console.log('Clicking All radio button...');
 
     const allRadioButton = page
-      .locator("cp-radiobutton#radfilterAll")
-      .locator("vaadin-radio-button#radio");
+      .locator('cp-radiobutton#radfilterAll')
+      .locator('vaadin-radio-button#radio');
 
     await allRadioButton.waitFor({
-      state: "visible",
+      state: 'visible',
       timeout: 120000,
     });
 
     await allRadioButton.click();
 
-    console.log("All radio button clicked.");
+    console.log('All radio button clicked.');
 
     await page.waitForTimeout(2000);
 
@@ -65,44 +65,42 @@ async function problemlist(page, visitKey) {
     // 5. Wait for Problem List application
     // -----------------------------------------
 
-    console.log("Waiting for Problem List grid...");
+    console.log('Waiting for Problem List grid...');
 
     await page.waitForFunction(
       () => {
-        const launcher = document.querySelector("body > cp-app-launcher");
+        const launcher = document.querySelector('body > cp-app-launcher');
 
         if (!launcher || !launcher.shadowRoot) {
           return false;
         }
 
-        const control = launcher.shadowRoot.querySelector("#control");
+        const control = launcher.shadowRoot.querySelector('#control');
 
         if (!control || !control.shadowRoot) {
           return false;
         }
 
-        const mainpanel = control.shadowRoot.querySelector("#mainpanel");
+        const mainpanel = control.shadowRoot.querySelector('#mainpanel');
 
         if (!mainpanel || !mainpanel.shadowRoot) {
           return false;
         }
 
-        const screens =
-          mainpanel.shadowRoot.querySelectorAll('[id^="screen_"]');
+        const screens = mainpanel.shadowRoot.querySelectorAll('[id^="screen_"]');
 
         for (const screen of screens) {
           if (!screen.shadowRoot) {
             continue;
           }
 
-          const problemList =
-            screen.shadowRoot.querySelector("#maplistproblems");
+          const problemList = screen.shadowRoot.querySelector('#maplistproblems');
 
           if (!problemList || !problemList.shadowRoot) {
             continue;
           }
 
-          const grid = problemList.shadowRoot.querySelector("cpsi-grid");
+          const grid = problemList.shadowRoot.querySelector('cpsi-grid');
 
           if (grid) {
             return true;
@@ -113,10 +111,10 @@ async function problemlist(page, visitKey) {
       },
       {
         timeout: 120000,
-      },
+      }
     );
 
-    console.log("Problem List grid found.");
+    console.log('Problem List grid found.');
 
     // -----------------------------------------
     // 6. Extract Problem List data
@@ -131,32 +129,30 @@ async function problemlist(page, visitKey) {
       // Find cp-app-launcher
       // -----------------------------------------
 
-      const launcher = document.querySelector(
-        "body > cp-app-launcher",
-      )?.shadowRoot;
+      const launcher = document.querySelector('body > cp-app-launcher')?.shadowRoot;
 
       if (!launcher) {
-        throw new Error("cp-app-launcher shadowRoot not found");
+        throw new Error('cp-app-launcher shadowRoot not found');
       }
 
       // -----------------------------------------
       // Find control
       // -----------------------------------------
 
-      const control = launcher.querySelector("#control")?.shadowRoot;
+      const control = launcher.querySelector('#control')?.shadowRoot;
 
       if (!control) {
-        throw new Error("#control shadowRoot not found");
+        throw new Error('#control shadowRoot not found');
       }
 
       // -----------------------------------------
       // Find mainpanel
       // -----------------------------------------
 
-      const mainpanel = control.querySelector("#mainpanel")?.shadowRoot;
+      const mainpanel = control.querySelector('#mainpanel')?.shadowRoot;
 
       if (!mainpanel) {
-        throw new Error("#mainpanel shadowRoot not found");
+        throw new Error('#mainpanel shadowRoot not found');
       }
 
       // -----------------------------------------
@@ -172,7 +168,7 @@ async function problemlist(page, visitKey) {
           return;
         }
 
-        const found = screenEl.shadowRoot.querySelector("#maplistproblems");
+        const found = screenEl.shadowRoot.querySelector('#maplistproblems');
 
         if (found) {
           maplistproblems = found;
@@ -180,22 +176,22 @@ async function problemlist(page, visitKey) {
       });
 
       if (!maplistproblems) {
-        throw new Error("maplistproblems not found");
+        throw new Error('maplistproblems not found');
       }
 
-      console.log("[Browser] #maplistproblems found.");
+      console.log('[Browser] #maplistproblems found.');
 
       // -----------------------------------------
       // Find cpsi-grid
       // -----------------------------------------
 
-      const gridHost = maplistproblems.shadowRoot?.querySelector("cpsi-grid");
+      const gridHost = maplistproblems.shadowRoot?.querySelector('cpsi-grid');
 
       if (!gridHost) {
-        throw new Error("cpsi-grid not found");
+        throw new Error('cpsi-grid not found');
       }
 
-      console.log("[Browser] cpsi-grid found.");
+      console.log('[Browser] cpsi-grid found.');
 
       // -----------------------------------------
       // Wait for grid table
@@ -204,10 +200,7 @@ async function problemlist(page, visitKey) {
       let upgraded = false;
 
       for (let attempt = 0; attempt < 30; attempt++) {
-        if (
-          gridHost.shadowRoot &&
-          gridHost.shadowRoot.querySelector("#table")
-        ) {
+        if (gridHost.shadowRoot && gridHost.shadowRoot.querySelector('#table')) {
           upgraded = true;
           break;
         }
@@ -216,23 +209,23 @@ async function problemlist(page, visitKey) {
       }
 
       if (!upgraded) {
-        throw new Error("grid table never rendered");
+        throw new Error('grid table never rendered');
       }
 
-      const scrollTable = gridHost.shadowRoot.querySelector("#table");
+      const scrollTable = gridHost.shadowRoot.querySelector('#table');
 
       if (!scrollTable) {
-        throw new Error("#table not found");
+        throw new Error('#table not found');
       }
 
-      console.log("[Browser] Grid table rendered.");
+      console.log('[Browser] Grid table rendered.');
 
       // -----------------------------------------
       // Wait for grid loading
       // -----------------------------------------
 
       for (let attempt = 0; attempt < 40; attempt++) {
-        if (!gridHost.hasAttribute("loading")) {
+        if (!gridHost.hasAttribute('loading')) {
           break;
         }
 
@@ -241,7 +234,7 @@ async function problemlist(page, visitKey) {
 
       await delay(700);
 
-      console.log("[Browser] Grid loading completed.");
+      console.log('[Browser] Grid loading completed.');
 
       // -----------------------------------------
       // Get total record count
@@ -249,15 +242,11 @@ async function problemlist(page, visitKey) {
 
       let totalCount = null;
 
-      for (
-        let probeAttempt = 0;
-        probeAttempt < 5 && totalCount === null;
-        probeAttempt++
-      ) {
+      for (let probeAttempt = 0; probeAttempt < 5 && totalCount === null; probeAttempt++) {
         try {
           totalCount = await new Promise((resolve, reject) => {
             const timeout = setTimeout(() => {
-              reject(new Error("probe timeout"));
+              reject(new Error('probe timeout'));
             }, 15000);
 
             gridHost.dataProvider(
@@ -270,7 +259,7 @@ async function problemlist(page, visitKey) {
               (items, size) => {
                 clearTimeout(timeout);
                 resolve(size);
-              },
+              }
             );
           });
         } catch (error) {
@@ -286,9 +275,9 @@ async function problemlist(page, visitKey) {
       // Force all rows visible
       // -----------------------------------------
 
-      gridHost.setAttribute("all-rows-visible", "");
+      gridHost.setAttribute('all-rows-visible', '');
 
-      if (typeof gridHost.recalculateColumnWidths === "function") {
+      if (typeof gridHost.recalculateColumnWidths === 'function') {
         try {
           gridHost.recalculateColumnWidths();
         } catch (error) {
@@ -297,7 +286,7 @@ async function problemlist(page, visitKey) {
       }
 
       try {
-        gridHost.style.height = "auto";
+        gridHost.style.height = 'auto';
       } catch (error) {
         // Ignore
       }
@@ -310,29 +299,29 @@ async function problemlist(page, visitKey) {
         function get(name) {
           const span = el.querySelector(`span[ctrl-name="${name}"]`);
 
-          return span ? span.textContent.trim() : "";
+          return span ? span.textContent.trim() : '';
         }
 
-        const rankVal = get("pl1_rank");
+        const rankVal = get('pl1_rank');
 
         return {
-          rank: rankVal === "" ? null : rankVal,
+          rank: rankVal === '' ? null : rankVal,
 
-          description: get("pl1_probdesc"),
+          description: get('pl1_probdesc'),
 
-          icd10: get("pl1_probdiagcd"),
+          icd10: get('pl1_probdiagcd'),
 
-          diagnosisDate: get("pl1_diagdate"),
+          diagnosisDate: get('pl1_diagdate'),
 
-          status: get("pl1_probtypedesc"),
+          status: get('pl1_probtypedesc'),
 
-          addressedDate: get("pl1_problastaddr"),
+          addressedDate: get('pl1_problastaddr'),
 
-          physician: get("phys1_name"),
+          physician: get('phys1_name'),
 
-          onsetDate: get("pl1_onsetdate"),
+          onsetDate: get('pl1_onsetdate'),
 
-          medicalHx: get("pl1_medicalhistory"),
+          medicalHx: get('pl1_medicalhistory'),
         };
       }
 
@@ -341,14 +330,12 @@ async function problemlist(page, visitKey) {
       // -----------------------------------------
 
       function collectVisibleRows() {
-        const cellContents = gridHost.querySelectorAll(
-          "vaadin-grid-cell-content",
-        );
+        const cellContents = gridHost.querySelectorAll('vaadin-grid-cell-content');
 
         const found = [];
 
         cellContents.forEach((cell) => {
-          const mapDiv = cell.querySelector(".cp-map");
+          const mapDiv = cell.querySelector('.cp-map');
 
           if (mapDiv) {
             found.push(mapDiv);
@@ -369,16 +356,16 @@ async function problemlist(page, visitKey) {
           const data = extractFields(el);
 
           const key =
-            (data.rank || "") +
-            "|" +
+            (data.rank || '') +
+            '|' +
             data.description +
-            "|" +
+            '|' +
             data.icd10 +
-            "|" +
+            '|' +
             data.addressedDate +
-            "|" +
+            '|' +
             data.physician +
-            "|" +
+            '|' +
             data.status;
 
           if (data.description) {
@@ -398,16 +385,12 @@ async function problemlist(page, visitKey) {
       let lastCount = -1;
       let stableRounds = 0;
 
-      console.log("[Browser] Waiting for problem rows...");
+      console.log('[Browser] Waiting for problem rows...');
 
       while (waited < maxWaitMs) {
         collectNow();
 
-        console.log(
-          `[Browser] Problems collected: ${
-            collected.size
-          } / ${totalCount ?? "unknown"}`,
-        );
+        console.log(`[Browser] Problems collected: ${collected.size} / ${totalCount ?? 'unknown'}`);
 
         if (totalCount !== null && collected.size >= totalCount) {
           break;
@@ -434,9 +417,9 @@ async function problemlist(page, visitKey) {
       // -----------------------------------------
 
       if (totalCount !== null && collected.size < totalCount) {
-        console.log("[Browser] Starting scroll fallback...");
+        console.log('[Browser] Starting scroll fallback...');
 
-        gridHost.removeAttribute("all-rows-visible");
+        gridHost.removeAttribute('all-rows-visible');
 
         await delay(1000);
 
@@ -444,9 +427,9 @@ async function problemlist(page, visitKey) {
           scrollTable.scrollTop = position;
 
           scrollTable.dispatchEvent(
-            new Event("scroll", {
+            new Event('scroll', {
               bubbles: true,
-            }),
+            })
           );
         }
 
@@ -493,7 +476,7 @@ async function problemlist(page, visitKey) {
 
         scrollTo(0);
 
-        console.log("[Browser] Scroll fallback completed.");
+        console.log('[Browser] Scroll fallback completed.');
       }
 
       // -----------------------------------------
@@ -521,22 +504,22 @@ async function problemlist(page, visitKey) {
     // 7. Log extracted data
     // -----------------------------------------
 
-    console.log("");
-    console.log("========================================");
-    console.log("PROBLEM LIST EXTRACTION COMPLETE");
-    console.log("========================================");
+    console.log('');
+    console.log('========================================');
+    console.log('PROBLEM LIST EXTRACTION COMPLETE');
+    console.log('========================================');
 
     console.log(`Problems found: ${problems.length}`);
 
     console.log(problems);
 
-    console.log("========================================");
+    console.log('========================================');
 
     // -----------------------------------------
     // 8. Save to database
     // -----------------------------------------
 
-    const result = await runPythonFunction("problemlist", [visitKey, problems]);
+    const result = await runPythonFunction('problemlist', [visitKey, problems]);
 
     if (result.success && result.result) {
       console.log(`Problem List data saved successfully for ${visitKey}.`);

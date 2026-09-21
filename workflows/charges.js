@@ -1,4 +1,4 @@
-const { runPythonFunction } = require("../database/pythonRunner");
+const { runPythonFunction } = require('../database/pythonRunner');
 
 async function charges(page, visitKey) {
   try {
@@ -6,7 +6,7 @@ async function charges(page, visitKey) {
     // 1. Build URL
     // =====================================================
 
-    const accountNumber = visitKey.split("V-")[1];
+    const accountNumber = visitKey.split('V-')[1];
 
     const url =
       `https://pinev.connect.evident.com/?` +
@@ -17,23 +17,23 @@ async function charges(page, visitKey) {
       `&medical_records=true` +
       `&op=launch_charts_usher/mr_${accountNumber}_1/charges`;
 
-    console.log("========================================");
-    console.log("Starting charges extraction");
-    console.log("Visit Key:", visitKey);
-    console.log("Account Number:", accountNumber);
-    console.log("URL:", url);
-    console.log("========================================");
+    console.log('========================================');
+    console.log('Starting charges extraction');
+    console.log('Visit Key:', visitKey);
+    console.log('Account Number:', accountNumber);
+    console.log('URL:', url);
+    console.log('========================================');
 
     // =====================================================
     // 2. Navigate
     // =====================================================
 
     await page.goto(url, {
-      waitUntil: "domcontentloaded",
+      waitUntil: 'domcontentloaded',
       timeout: 120000,
     });
 
-    console.log("Page loaded.");
+    console.log('Page loaded.');
 
     await page.waitForTimeout(5 * 1000);
 
@@ -41,23 +41,23 @@ async function charges(page, visitKey) {
     // 3. Wait for application / Shadow DOM
     // =====================================================
 
-    console.log("Waiting for application to load...");
+    console.log('Waiting for application to load...');
 
     await page.waitForFunction(
       () => {
-        const launcher = document.querySelector("body > cp-app-launcher");
+        const launcher = document.querySelector('body > cp-app-launcher');
 
         if (!launcher?.shadowRoot) {
           return false;
         }
 
-        const control = launcher.shadowRoot.querySelector("#control");
+        const control = launcher.shadowRoot.querySelector('#control');
 
         if (!control?.shadowRoot) {
           return false;
         }
 
-        const mainpanel = control.shadowRoot.querySelector("#mainpanel");
+        const mainpanel = control.shadowRoot.querySelector('#mainpanel');
 
         if (!mainpanel?.shadowRoot) {
           return false;
@@ -67,10 +67,10 @@ async function charges(page, visitKey) {
       },
       {
         timeout: 120000,
-      },
+      }
     );
 
-    console.log("Application Shadow DOM is ready.");
+    console.log('Application Shadow DOM is ready.');
 
     // =====================================================
     // 4. YOUR EXISTING EXTRACTION CODE
@@ -89,41 +89,39 @@ async function charges(page, visitKey) {
       // Find cp-app-launcher
       // ===================================================
 
-      console.log("[Browser] Looking for cp-app-launcher...");
+      console.log('[Browser] Looking for cp-app-launcher...');
 
-      const launcher = document.querySelector(
-        "body > cp-app-launcher",
-      )?.shadowRoot;
+      const launcher = document.querySelector('body > cp-app-launcher')?.shadowRoot;
 
       if (!launcher) {
-        throw new Error("cp-app-launcher shadowRoot not found");
+        throw new Error('cp-app-launcher shadowRoot not found');
       }
 
-      console.log("[Browser] cp-app-launcher found.");
+      console.log('[Browser] cp-app-launcher found.');
 
       // ===================================================
       // Find #control
       // ===================================================
 
-      const control = launcher.querySelector("#control")?.shadowRoot;
+      const control = launcher.querySelector('#control')?.shadowRoot;
 
       if (!control) {
-        throw new Error("#control shadowRoot not found");
+        throw new Error('#control shadowRoot not found');
       }
 
-      console.log("[Browser] #control found.");
+      console.log('[Browser] #control found.');
 
       // ===================================================
       // Find #mainpanel
       // ===================================================
 
-      const mainpanel = control.querySelector("#mainpanel")?.shadowRoot;
+      const mainpanel = control.querySelector('#mainpanel')?.shadowRoot;
 
       if (!mainpanel) {
-        throw new Error("#mainpanel shadowRoot not found");
+        throw new Error('#mainpanel shadowRoot not found');
       }
 
-      console.log("[Browser] #mainpanel found.");
+      console.log('[Browser] #mainpanel found.');
 
       // ===================================================
       // Find #searchItemsDiv
@@ -140,7 +138,7 @@ async function charges(page, visitKey) {
           return;
         }
 
-        const found = screenEl.shadowRoot.querySelector("#searchItemsDiv");
+        const found = screenEl.shadowRoot.querySelector('#searchItemsDiv');
 
         if (found) {
           searchItemsDiv = found;
@@ -148,40 +146,40 @@ async function charges(page, visitKey) {
       });
 
       if (!searchItemsDiv) {
-        throw new Error("searchItemsDiv not found");
+        throw new Error('searchItemsDiv not found');
       }
 
-      console.log("[Browser] #searchItemsDiv found.");
+      console.log('[Browser] #searchItemsDiv found.');
 
       // ===================================================
       // Find departmentSearchList
       // ===================================================
 
-      const maplist = searchItemsDiv.querySelector("#departmentSearchList");
+      const maplist = searchItemsDiv.querySelector('#departmentSearchList');
 
       if (!maplist) {
-        throw new Error("departmentSearchList not found");
+        throw new Error('departmentSearchList not found');
       }
 
       if (!maplist.shadowRoot) {
-        throw new Error("departmentSearchList shadowRoot not found");
+        throw new Error('departmentSearchList shadowRoot not found');
       }
 
       const maplistRoot = maplist.shadowRoot;
 
-      console.log("[Browser] #departmentSearchList found.");
+      console.log('[Browser] #departmentSearchList found.');
 
       // ===================================================
       // Find cpsi-grid
       // ===================================================
 
-      const gridHost = maplistRoot.querySelector("cpsi-grid");
+      const gridHost = maplistRoot.querySelector('cpsi-grid');
 
       if (!gridHost) {
-        throw new Error("cpsi-grid not found");
+        throw new Error('cpsi-grid not found');
       }
 
-      console.log("[Browser] cpsi-grid found.");
+      console.log('[Browser] cpsi-grid found.');
 
       // ===================================================
       // Extract order description
@@ -193,9 +191,7 @@ async function charges(page, visitKey) {
         // -----------------------------------------------
 
         if (item._element) {
-          const span = item._element.querySelector(
-            'span[ctrl-name="order_description"]',
-          );
+          const span = item._element.querySelector('span[ctrl-name="order_description"]');
 
           if (span) {
             return span.textContent.trim();
@@ -208,7 +204,7 @@ async function charges(page, visitKey) {
 
         if (item.markup) {
           const match = item.markup.match(
-            /<span[^>]*ctrl-name="order_description"[^>]*>([^<]*)<\/span>/,
+            /<span[^>]*ctrl-name="order_description"[^>]*>([^<]*)<\/span>/
           );
 
           if (match) {
@@ -237,14 +233,14 @@ async function charges(page, visitKey) {
 
             (items, size) => {
               console.log(
-                `[Browser] Page ${pageNumber} returned ${items?.length || 0} items. Total records: ${size}`,
+                `[Browser] Page ${pageNumber} returned ${items?.length || 0} items. Total records: ${size}`
               );
 
               resolve({
                 items,
                 size,
               });
-            },
+            }
           );
         });
 
@@ -261,7 +257,7 @@ async function charges(page, visitKey) {
       // Extract all pages
       // ===================================================
 
-      console.log("[Browser] Loading first page...");
+      console.log('[Browser] Loading first page...');
 
       const firstPage = await loadPage(0);
 
@@ -269,7 +265,7 @@ async function charges(page, visitKey) {
 
       const totalPages = Math.ceil(totalRecords / pageSize);
 
-      console.log("========================================");
+      console.log('========================================');
 
       console.log(`[Browser] Total Records: ${totalRecords}`);
 
@@ -277,7 +273,7 @@ async function charges(page, visitKey) {
 
       console.log(`[Browser] Total Pages: ${totalPages}`);
 
-      console.log("========================================");
+      console.log('========================================');
 
       // ===================================================
       // Store unique records
@@ -349,13 +345,13 @@ async function charges(page, visitKey) {
       // Return results
       // ===================================================
 
-      console.log("========================================");
+      console.log('========================================');
 
       console.log(`[Browser] EXTRACTION COMPLETE`);
 
       console.log(`[Browser] Total unique rows: ${results.length}`);
 
-      console.log("========================================");
+      console.log('========================================');
 
       return results;
     });
@@ -364,10 +360,10 @@ async function charges(page, visitKey) {
     // 5. Display result
     // =====================================================
 
-    console.log("");
-    console.log("========================================");
-    console.log("FINAL EXTRACTION RESULT");
-    console.log("========================================");
+    console.log('');
+    console.log('========================================');
+    console.log('FINAL EXTRACTION RESULT');
+    console.log('========================================');
 
     console.log(`Total extracted rows: ${transactions.length}`);
 
@@ -375,16 +371,13 @@ async function charges(page, visitKey) {
       console.log(`${index + 1}. ${description}`);
     });
 
-    console.log("========================================");
+    console.log('========================================');
 
     // =====================================================
     // 7. Send to Python / DB
     // =====================================================
 
-    const result = await runPythonFunction("search_charges", [
-      visitKey,
-      transactions,
-    ]);
+    const result = await runPythonFunction('search_charges', [visitKey, transactions]);
 
     if (result.success && result.result) {
       console.log(`Charge data saved successfully for ${visitKey}.`);
